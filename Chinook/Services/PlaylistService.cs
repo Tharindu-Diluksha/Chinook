@@ -71,7 +71,7 @@ namespace Chinook.Services
         {
             using var dbContext = _dbFactory.CreateDbContext();
 
-            var playlists = await dbContext.Playlists
+            var playlist = await dbContext.Playlists
                 .Include(a => a.Tracks).ThenInclude(a => a.Album).ThenInclude(a => a.Artist)
                 .Where(p => p.PlaylistId == playlistId)
                 .Select(p => new PlaylistClientModel()
@@ -90,7 +90,7 @@ namespace Chinook.Services
                 })
                 .FirstOrDefaultAsync();
 
-            return playlists;
+            return playlist;
         }
 
         public async Task<List<PlaylistClientModel>> GetPlayListsAsync(string currentUserId)
