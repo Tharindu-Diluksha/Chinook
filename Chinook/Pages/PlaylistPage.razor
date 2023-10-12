@@ -4,6 +4,7 @@
 @using Chinook.ClientModels;
 @using Chinook.Constants;
 @using Chinook.Contracts;
+@using Chinook.Exceptions;
 @using Chinook.Models
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims;
@@ -101,12 +102,18 @@ else
         {
             _favouritePlayListId = await PlaylistService.CreateNewPlaylistAsync(CommonConstant.UserFavouritePlayListName, _currentUserId);
         }
+        try
+        {
+            await PlaylistService.AddTrackToPlaylistAsync(_favouritePlayListId, trackId);
 
-        await PlaylistService.AddTrackToPlaylistAsync(_favouritePlayListId, trackId);
-
-        var track = _playlist.Tracks.FirstOrDefault(t => t.TrackId == trackId);
-        track.IsFavorite = true;
-        _infoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} added to playlist Favorites.";
+            var track = _playlist.Tracks.FirstOrDefault(t => t.TrackId == trackId);
+            track.IsFavorite = true;
+            _infoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} added to playlist Favorites.";
+        }
+        catch (DuplicateRecordException ex)
+        {
+            _infoMessage = ex.Message;
+        }
     }
 
     private async Task UnfavoriteTrackAsync(long trackId)

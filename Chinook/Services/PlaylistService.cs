@@ -1,6 +1,7 @@
 ﻿using Chinook.ClientModels;
 using Chinook.Constants;
 using Chinook.Contracts;
+using Chinook.Exceptions;
 using Chinook.Models;
 using Chinook.States;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +22,13 @@ namespace Chinook.Services
         public async Task AddTrackToPlaylistAsync(long playlistId, long trackId)
         {
             using var dbContext = _dbFactory.CreateDbContext();
-            var updatingPlaylist = await dbContext.Playlists.FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
+            var updatingPlaylist = await dbContext.Playlists.Include(p => p.Tracks).FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
             if (updatingPlaylist != null)
             {
+                if (updatingPlaylist.Tracks.Any(t => t.TrackId == trackId))
+                {
+                    throw new DuplicateRecordException("Track already in the playlist");
+                }
                 var track = await dbContext.Tracks.FirstOrDefaultAsync(t => t.TrackId == trackId);
                 if (track != null)
                     updatingPlaylist.Tracks.Add(track);
@@ -48,7 +53,7 @@ namespace Chinook.Services
         {
             // Validate for duplicate playlist
             if (await IsDuplicatePlaylistForUserAsync(playlistName, currentUserId))
-                throw new Exception($"Duplicate Playlist {playlistName}");
+                throw new DuplicateRecordException($"Error duplicate playlist:- {playlistName}");
 
             using var dbContext = _dbFactory.CreateDbContext();
             Playlist newPlaylist = new Playlist { Name = playlistName };

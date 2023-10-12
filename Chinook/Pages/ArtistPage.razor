@@ -3,6 +3,7 @@
 
 @using Chinook.Constants;
 @using Chinook.Contracts;
+@using Chinook.Exceptions;
 @using Chinook.Models
 @using Chinook.ClientModels
 @using Microsoft.EntityFrameworkCore
@@ -133,18 +134,27 @@ else
     {
         CloseInfoMessage();
 
-        if (_selectedPlaylistId != -1)
+        try
         {
-            // Add the track to the existing playlist
-            await PlaylistService.AddTrackToPlaylistAsync(_selectedPlaylistId, _selectedTrack.TrackId);
-            _infoMessage = $"Track {_artist.Name} - {_selectedTrack.AlbumTitle} - {_selectedTrack.TrackName} added to playlist.";
+            if (_selectedPlaylistId != -1)
+            {
+                // Add the track to the existing playlist
+                await PlaylistService.AddTrackToPlaylistAsync(_selectedPlaylistId, _selectedTrack.TrackId);
+                _infoMessage = $"Track {_artist.Name} - {_selectedTrack.AlbumTitle} - {_selectedTrack.TrackName} added to playlist.";
+            }
+            else if (!string.IsNullOrEmpty(_newPlaylistName))
+            {
+
+
+                // Create a new playlist and add the track to it
+                var newPlayListId = await PlaylistService.CreateNewPlaylistAsync(_newPlaylistName, _currentUserId);
+                await PlaylistService.AddTrackToPlaylistAsync(newPlayListId, _selectedTrack.TrackId);
+                _infoMessage = $"Playlist {_newPlaylistName} is created and Track {_artist.Name} - {_selectedTrack.AlbumTitle} - {_selectedTrack.TrackName} added to the playlist.";
+            }
         }
-        else if (!string.IsNullOrEmpty(_newPlaylistName))
+        catch (DuplicateRecordException ex)
         {
-            // Create a new playlist and add the track to it
-            var newPlayListId = await PlaylistService.CreateNewPlaylistAsync(_newPlaylistName, _currentUserId);
-            await PlaylistService.AddTrackToPlaylistAsync(newPlayListId, _selectedTrack.TrackId);
-            _infoMessage = $"Playlist {_newPlaylistName} is created and Track {_artist.Name} - {_selectedTrack.AlbumTitle} - {_selectedTrack.TrackName} added to the playlist.";
+            _infoMessage = ex.Message;
         }
 
         // Close the modal
@@ -159,8 +169,6 @@ else
     {
         _infoMessage = "";
     }
-
-
 }
 
 <Modal @ref="_playlistDialog">
