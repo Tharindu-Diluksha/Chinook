@@ -77,14 +77,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentUserId = await GetUserId();
-
-        // await InvokeAsync(StateHasChanged);
-        // _playlist = await PlaylistService.GetPlayListByIdAsync(PlaylistId, _currentUserId);
         _favouritePlayListId = await PlaylistService.GetFavouritePlaylistIdOfUserAsync(_currentUserId);
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        CloseInfoMessage();
         await InvokeAsync(StateHasChanged);
         _playlist = await PlaylistService.GetPlayListByIdAsync(PlaylistId, _currentUserId);
     }

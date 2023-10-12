@@ -1,7 +1,6 @@
 ﻿using Chinook.ClientModels;
 using Chinook.Constants;
 using Chinook.Contracts;
-using Chinook.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chinook.Services

@@ -17,6 +17,11 @@
 }
 else
 {
+    <div class="form-group mb-2">
+        <label for="ArtisSearch">Search Artists</label>
+        <input type="text" id="ArtisSearch" class="form-control" placeholder="Artist name" @bind="_searchingArtistName" @oninput="OnInput">
+    </div>
+
     <table class="table table-striped table-hover table-sm">
         <thead>
             <tr>
@@ -38,6 +43,8 @@ else
 
 @code {
     private List<ArtistClientModel> _artists;
+    private string _searchingArtistName = string.Empty;
+    private Timer _timer;
 
     protected override async Task OnInitializedAsync() {
         await InvokeAsync(StateHasChanged);
@@ -46,7 +53,26 @@ else
 
     public async Task<List<ArtistClientModel>> GetArtists()
     {
-        var artists = await ArtistService.GetArtistsAsync();
+        var artists = await ArtistService.GetArtistsAsync(_searchingArtistName);
         return artists;
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _searchingArtistName = e.Value.ToString();
+        if (_timer != null)
+        {
+            _timer.Dispose();
+        }
+        _timer = new Timer(Search, null, 400, Timeout.Infinite);
+    }
+
+    private void Search(object state)
+    {
+        InvokeAsync(async () =>
+        {
+            _artists = await GetArtists();
+            StateHasChanged();
+        });
     }
 }

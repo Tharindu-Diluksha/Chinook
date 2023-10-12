@@ -6,6 +6,6 @@ namespace Chinook.Contracts
     {
         Task<ArtistClientModel> GetArtistByIdAsync(long artistId);
 
-        Task<List<ArtistClientModel>> GetArtistsAsync();
+        Task<List<ArtistClientModel>> GetArtistsAsync(string artistName = "");
     }
 }

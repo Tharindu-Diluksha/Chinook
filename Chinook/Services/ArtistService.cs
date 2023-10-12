@@ -29,10 +29,11 @@ namespace Chinook.Services
             return artist;
         }
 
-        public async Task<List<ArtistClientModel>> GetArtistsAsync()
+        public async Task<List<ArtistClientModel>> GetArtistsAsync(string artistName = "")
         {
             using var dbContext = _dbFactory.CreateDbContext();
             var artists = await dbContext.Artists
+                .Where(a => (string.IsNullOrEmpty(artistName)) || (!string.IsNullOrEmpty(artistName) && a.Name != null && a.Name.ToUpper().StartsWith(artistName.ToUpper())))
                 .Include(a => a.Albums)
                 .Select(a => new ArtistClientModel
                 {
