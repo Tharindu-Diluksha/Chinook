@@ -14,3 +14,13 @@ When creating a user account, you will see this:
 After you click 'Click here to confirm your account' you should be able to login.
 
 Please put the code in Github. Please put the original code (our code) in the master branch, put your code in a separate branch, and make a pull request to the master branch.
+
+
+Dev Note:-
+1. Implemented all the above mentioned features
+2. Implemented search artist feature on search box text changes
+3. Followed the proper C# naming conventions and changed some varibale names.
+4. Used "CascadingValue" to share the status among multiple components. Used to keep and use the Playlists to show in NavMenu (with real time update) and in Add tracks to playlist dialog
+5. Used constant for "My favourite" playlist
+6. Check for duplicate playlists while creating a playlist and check for duplicate tracks in the same playlist while adding the tracks to the playlist (with exception handling)
+7. Configured the fluent API to generate automatic Id for playlists
