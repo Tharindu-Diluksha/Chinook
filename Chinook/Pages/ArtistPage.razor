@@ -6,12 +6,13 @@
 @using Chinook.Exceptions;
 @using Chinook.Models
 @using Chinook.ClientModels
+@using Chinook.States;
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims;
 @inject IArtistService ArtistService
 @inject ITrackService TrackService
 @inject IPlaylistService PlaylistService
-
+@inject PlaylistState PlaylistState
 
 @if (!string.IsNullOrWhiteSpace(_infoMessage))
 {
@@ -91,6 +92,8 @@ else
         _tracks = await TrackService.GetTracksByArtistIdAsync(ArtistId, _currentUserId);
 
         _playlists = await PlaylistService.GetPlayListsAsync(_currentUserId);
+        PlaylistState.Playlists = _playlists;
+        PlaylistState.OnChange += UpdatePlaylists;
     }
 
     private async Task<string> GetUserId()
@@ -144,8 +147,6 @@ else
             }
             else if (!string.IsNullOrEmpty(_newPlaylistName))
             {
-
-
                 // Create a new playlist and add the track to it
                 var newPlayListId = await PlaylistService.CreateNewPlaylistAsync(_newPlaylistName, _currentUserId);
                 await PlaylistService.AddTrackToPlaylistAsync(newPlayListId, _selectedTrack.TrackId);
@@ -168,6 +169,12 @@ else
     private void CloseInfoMessage()
     {
         _infoMessage = "";
+    }
+
+    private void UpdatePlaylists()
+    {
+        _playlists = PlaylistState.Playlists;
+        StateHasChanged();
     }
 }
 
