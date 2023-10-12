@@ -40,7 +40,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var track in Tracks)
+            @foreach (var track in _tracks)
             {
                 <tr>
                     <td>@track.AlbumTitle</td>
@@ -70,12 +70,15 @@ else
     private Modal PlaylistDialog { get; set; }
 
     private ArtistClientModel _artist;
-    private List<PlaylistTrackClientModel> Tracks;
+    private List<PlaylistTrackClientModel> _tracks;
     private DbContext DbContext;
     private PlaylistTrackClientModel SelectedTrack;
     private string InfoMessage;
     private string CurrentUserId;
     private long _favouritePlayListId = -1;
+    private List<PlaylistClientModel> _playlists;
+    private long _selectedPlaylistId = -1;
+    private string _newPlaylistName;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,7 +89,9 @@ else
 
         _artist = await ArtistService.GetArtistByIdAsync(ArtistId);
 
-        Tracks = await TrackService.GetTracksByArtistIdAsync(ArtistId, CurrentUserId);
+        _tracks = await TrackService.GetTracksByArtistIdAsync(ArtistId, CurrentUserId);
+
+        _playlists = await PlaylistService.GetPlayListsAsync(CurrentUserId);
 
         // var DbContext = await DbFactory.CreateDbContextAsync();
 
@@ -120,7 +125,7 @@ else
 
         await PlaylistService.AddTrackToPlaylistAsync(_favouritePlayListId, trackId);
 
-        var track = Tracks.FirstOrDefault(t => t.TrackId == trackId);
+        var track = _tracks.FirstOrDefault(t => t.TrackId == trackId);
         track.IsFavorite = true;
         InfoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} added to playlist Favorites.";
     }
@@ -129,7 +134,7 @@ else
     {
         await PlaylistService.RemoveTrackFromPlaylistAsync(_favouritePlayListId, trackId);
 
-        var track = Tracks.FirstOrDefault(t => t.TrackId == trackId);
+        var track = _tracks.FirstOrDefault(t => t.TrackId == trackId);
         track.IsFavorite = false;
         InfoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} removed from playlist Favorites.";
     }
@@ -137,15 +142,36 @@ else
     private void OpenPlaylistDialog(long trackId)
     {
         CloseInfoMessage();
-        SelectedTrack = Tracks.FirstOrDefault(t => t.TrackId == trackId);
+        SelectedTrack = _tracks.FirstOrDefault(t => t.TrackId == trackId);
         PlaylistDialog.Open();
     }
 
-    private void AddTrackToPlaylist()
+    private async Task AddTrackToPlaylistAsync()
     {
         CloseInfoMessage();
         InfoMessage = $"Track {_artist.Name} - {SelectedTrack.AlbumTitle} - {SelectedTrack.TrackName} added to playlist {{playlist name}}.";
+
+        if (_selectedPlaylistId != -1)
+        {
+            // Add the track to the existing playlist
+            //await AddTrackToExistingPlaylist(selectedPlaylistId, SelectedTrack.Id);
+            await PlaylistService.AddTrackToPlaylistAsync(_selectedPlaylistId, SelectedTrack.TrackId);
+
+        }
+        else if (!string.IsNullOrEmpty(_newPlaylistName))
+        {
+            // Create a new playlist and add the track to it
+            //await CreateNewPlaylistAndAddTrack(newPlaylistName, SelectedTrack.Id);
+            var newPlayListId = await PlaylistService.CreateNewPlaylistAsync(_newPlaylistName, CurrentUserId);
+            await PlaylistService.AddTrackToPlaylistAsync(newPlayListId, SelectedTrack.TrackId);
+        }
+
+        // Close the modal
         PlaylistDialog.Close();
+
+        // Clear the form inputs
+        _selectedPlaylistId = -1;
+        _newPlaylistName = "";
     }
 
     private void CloseInfoMessage()
@@ -170,18 +196,20 @@ else
 
         <div class="form-group mb-2">
             <label for="ExistingPlaylist">Add to existing playlist</label>
-            <select class="form-control" id="ExistingPlaylist">
-                <option>Playlist 1</option>
-                <option>Playlist 2</option>
-                <option>Playlist 3</option>
+            <select class="form-control" id="ExistingPlaylist" @bind="_selectedPlaylistId">
+                <option value="-1">Select a playlist</option>
+                @foreach (var playlist in _playlists)
+                {
+                    <option value=@playlist.Id>@playlist.Name</option>
+                }
             </select>
         </div>
         <div class="form-group mb-2">
             <label for="NewPlaylist">Create new playlist</label>
-            <input type="text" id="NewPlaylist" class="form-control" placeholder="Name for the new playlist">
+            <input type="text" id="NewPlaylist" class="form-control" placeholder="Name for the new playlist" @bind="_newPlaylistName">
         </div>
     </Body>
     <Footer>
-        <button class="btn btn-success" @onclick="AddTrackToPlaylist">Save</button>
+        <button class="btn btn-success" @onclick="@(async() => await AddTrackToPlaylistAsync())">Save</button>
     </Footer>
 </Modal>

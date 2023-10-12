@@ -12,7 +12,7 @@ namespace Chinook.Contracts
 
         Task<long> GetFavouritePlaylistIdOfUserAsync(string userId);
 
-        Task<List<PlaylistClientModel>> GetPlayListsAsync();
+        Task<List<PlaylistClientModel>> GetPlayListsAsync(string currentUserId);
 
         Task RemoveTrackFromPlaylistAsync(long playlistId, long trackId);
 

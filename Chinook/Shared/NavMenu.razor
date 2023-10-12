@@ -1,4 +1,9 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Chinook.ClientModels;
+@using Chinook.Contracts;
+@using System.Security.Claims;
+@inject IPlaylistService PlaylistService
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Chinook</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -16,22 +21,43 @@
         </div>
         <div class="nav-item px-3">
 
-            <NavLink class="nav-link" href="playlist/playlistnumber">
-                <i class="bi bi-music-note-list me-3" style="font-size: 1.25em"></i>My favorite tracks
-            </NavLink>
+            @foreach (var playlist in _playlists)
+            {
+                <NavLink class="nav-link" href="@($"playlist/{playlist.Id}")">
+                    <i class="bi bi-music-note-list me-3" style="font-size: 1.25em"></i>@playlist.Name
+                </NavLink>
+            }
 
-</div>
+        </div>
 
     </nav>
 </div>
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
     private bool collapseNavMenu = true;
+    private string _currentUserId;
+    private List<PlaylistClientModel> _playlists;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        _currentUserId = await GetUserId();
+
+        _playlists = await PlaylistService.GetPlayListsAsync(_currentUserId);
+    }
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task<string> GetUserId()
+    {
+        var user = (await authenticationState).User;
+        var userId = user.FindFirst(u => u.Type.Contains(ClaimTypes.NameIdentifier))?.Value;
+        return userId;
     }
 }

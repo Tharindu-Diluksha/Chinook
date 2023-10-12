@@ -51,8 +51,8 @@ namespace Chinook.Services
             using var dbContext = _dbFactory.CreateDbContext();
             Playlist newPlaylist = new Playlist { Name = playlistName };
             UserPlaylist newUserPlaylist = new UserPlaylist { PlaylistId = newPlaylist.PlaylistId, UserId = currentUserId };
+            newPlaylist.UserPlaylists = new List<UserPlaylist> { newUserPlaylist };
             dbContext.Playlists.Add(newPlaylist);
-            dbContext.UserPlaylists.Add(newUserPlaylist);
             await dbContext.SaveChangesAsync();
             return newPlaylist.PlaylistId;
         }
@@ -93,9 +93,15 @@ namespace Chinook.Services
             return playlists;
         }
 
-        public async Task<List<PlaylistClientModel>> GetPlayListsAsync()
+        public async Task<List<PlaylistClientModel>> GetPlayListsAsync(string currentUserId)
         {
-            throw new NotImplementedException();
+            using var dbContext = _dbFactory.CreateDbContext();
+            var userPlaylist = await dbContext.UserPlaylists
+                .Include(up => up.Playlist)
+                .Where(up => up.UserId == currentUserId)
+                .Select (up => new PlaylistClientModel { Name =  up.Playlist.Name, Id = up.PlaylistId})
+                .ToListAsync();
+            return userPlaylist;
         }
 
         public async Task<List<PlaylistClientModel>> SearchPlaylistsAsync(string playlistName)
