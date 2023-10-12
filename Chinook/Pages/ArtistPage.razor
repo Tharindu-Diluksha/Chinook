@@ -76,7 +76,7 @@ else
     private long _favouritePlayListId = -1;
     private List<PlaylistClientModel> _playlists;
     private long _selectedPlaylistId = -1;
-    private string _newPlaylistName;
+    private string _newPlaylistName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -177,7 +177,7 @@ else
 
         <div class="form-group mb-2">
             <label for="ExistingPlaylist">Add to existing playlist</label>
-            <select class="form-control" id="ExistingPlaylist" @bind="_selectedPlaylistId">
+            <select class="form-control" id="ExistingPlaylist" @bind="_selectedPlaylistId" disabled="@(_newPlaylistName != string.Empty)">
                 <option value="-1">Select a playlist</option>
                 @foreach (var playlist in _playlists)
                 {
@@ -187,7 +187,7 @@ else
         </div>
         <div class="form-group mb-2">
             <label for="NewPlaylist">Create new playlist</label>
-            <input type="text" id="NewPlaylist" class="form-control" placeholder="Name for the new playlist" @bind="_newPlaylistName">
+            <input type="text" id="NewPlaylist" class="form-control" disabled="@(_selectedPlaylistId != -1)" placeholder="Name for the new playlist" @bind="_newPlaylistName">
         </div>
     </Body>
     <Footer>

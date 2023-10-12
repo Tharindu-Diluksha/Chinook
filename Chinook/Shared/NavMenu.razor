@@ -1,7 +1,9 @@
 ﻿@using Chinook.ClientModels;
 @using Chinook.Contracts;
 @using System.Security.Claims;
+@using Chinook.States;
 @inject IPlaylistService PlaylistService
+@inject PlaylistState PlaylistState
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -45,6 +47,8 @@
         _currentUserId = await GetUserId();
 
         _playlists = await PlaylistService.GetPlayListsAsync(_currentUserId);
+        PlaylistState.Playlists = _playlists;
+        PlaylistState.OnChange += UpdatePlaylists;
     }
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -59,5 +63,11 @@
         var user = (await authenticationState).User;
         var userId = user.FindFirst(u => u.Type.Contains(ClaimTypes.NameIdentifier))?.Value;
         return userId;
+    }
+
+    private void UpdatePlaylists()
+    {
+        _playlists = PlaylistState.Playlists;
+        StateHasChanged();
     }
 }

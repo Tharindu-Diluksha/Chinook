@@ -2,6 +2,7 @@
 using Chinook.Constants;
 using Chinook.Contracts;
 using Chinook.Models;
+using Chinook.States;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chinook.Services
@@ -9,10 +10,12 @@ namespace Chinook.Services
     public class PlaylistService : IPlaylistService
     {
         private readonly IDbContextFactory<ChinookContext> _dbFactory;
+        private readonly PlaylistState _playlistState;
 
-        public PlaylistService(IDbContextFactory<ChinookContext> dbFactory)
+        public PlaylistService(IDbContextFactory<ChinookContext> dbFactory, PlaylistState playlistState)
         {
             _dbFactory = dbFactory;
+            _playlistState = playlistState;
         }
 
         public async Task AddTrackToPlaylistAsync(long playlistId, long trackId)
@@ -53,6 +56,8 @@ namespace Chinook.Services
             newPlaylist.UserPlaylists = new List<UserPlaylist> { newUserPlaylist };
             dbContext.Playlists.Add(newPlaylist);
             await dbContext.SaveChangesAsync();
+            _playlistState.AddPlaylist(new PlaylistClientModel {Id = newPlaylist.PlaylistId , Name = playlistName });
+
             return newPlaylist.PlaylistId;
         }
 
