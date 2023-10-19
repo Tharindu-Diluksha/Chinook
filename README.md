@@ -24,3 +24,4 @@ Dev Note:-
 5. Used constant for "My favourite" playlist
 6. Check for duplicate playlists while creating a playlist and check for duplicate tracks in the same playlist while adding the tracks to the playlist (with exception handling)
 7. Configured the fluent API to generate automatic Id for playlists
+8. Use automapper to map client models and data models.
