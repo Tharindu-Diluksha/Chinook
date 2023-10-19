@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Chinook.ClientModels;
-using Chinook.Constants;
 using Chinook.Contracts;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,15 +25,10 @@ namespace Chinook.Services
                 .Include(t => t.Playlists).ThenInclude(tp => tp.UserPlaylists)
                 .ToListAsync();
 
-            var playlistTracks = _mapper.Map<List<PlaylistTrack>>(tracks);
-
-            // Map the IsFavorite property
-            foreach (var track in playlistTracks)
+            var playlistTracks = _mapper.Map<List<PlaylistTrack>>(tracks, opts =>
             {
-                track.IsFavorite = tracks
-                    .Where(t => t.TrackId == track.TrackId && t.Playlists.Any(p => p.UserPlaylists.Any(up => up.UserId == currentUserId && up.Playlist.Name == CommonConstant.UserFavouritePlayListName)))
-                    .Any();
-            }
+                opts.Items["CurrentUserId"] = currentUserId;
+            });
 
             return playlistTracks;
         }

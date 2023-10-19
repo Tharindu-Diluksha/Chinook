@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Chinook.Constants;
 using Chinook.Models;
 
 namespace Chinook
@@ -15,7 +16,11 @@ namespace Chinook
                 .ForMember(dest => dest.ArtistName, opt => opt.MapFrom(src => src.Album != null && src.Album.Artist != null ? src.Album.Artist.Name : string.Empty))
                 .ForMember(dest => dest.TrackId, opt => opt.MapFrom(src => src.TrackId))
                 .ForMember(dest => dest.TrackName, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.IsFavorite, opt => opt.Ignore()); // Ignored for now
+                .AfterMap((src, dest, context) =>
+                {
+                    var currentUserId = context.Items["CurrentUserId"].ToString();
+                    dest.IsFavorite = src.Playlists.Any(p => p.UserPlaylists.Any(up => up.UserId == currentUserId && up.Playlist.Name == CommonConstant.UserFavouritePlayListName));
+                });
 
             CreateMap<Playlist, ClientModels.Playlist>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))

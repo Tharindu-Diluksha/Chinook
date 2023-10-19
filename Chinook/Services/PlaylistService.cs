@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Chinook.ClientModels;
 using Chinook.Constants;
 using Chinook.Contracts;
 using Chinook.Exceptions;
@@ -89,15 +88,10 @@ namespace Chinook.Services
                  .Where(p => p.PlaylistId == playlistId)
                  .FirstOrDefaultAsync();
 
-            var clientPlaylist = _mapper.Map<ClientModels.Playlist>(playlist);
-
-            // Map the IsFavorite property
-            foreach (var track in clientPlaylist.Tracks)
+            var clientPlaylist = _mapper.Map<ClientModels.Playlist>(playlist, opts =>
             {
-                track.IsFavorite = playlist.Tracks
-                    .Where(t => t.TrackId == track.TrackId && t.Playlists.Any(p => p.UserPlaylists.Any(up => up.UserId == currentUserId && up.Playlist.Name == CommonConstant.UserFavouritePlayListName)))
-                    .Any();
-            }
+                opts.Items["CurrentUserId"] = currentUserId;
+            });
 
             return clientPlaylist;
         }
