@@ -3,7 +3,6 @@
 
 @using Chinook.ClientModels;
 @using Chinook.Contracts;
-@using Chinook.Models
 @using Microsoft.EntityFrameworkCore
 @inject IArtistService ArtistService
 
@@ -42,7 +41,7 @@ else
 }
 
 @code {
-    private List<ArtistClientModel> _artists;
+    private List<Artist> _artists;
     private string _searchingArtistName = string.Empty;
     private Timer _timer;
 
@@ -51,7 +50,7 @@ else
         _artists = await GetArtists();
     }
 
-    public async Task<List<ArtistClientModel>> GetArtists()
+    public async Task<List<Artist>> GetArtists()
     {
         var artists = await ArtistService.GetArtistsAsync(_searchingArtistName);
         return artists;

@@ -8,14 +8,14 @@ namespace Chinook.Contracts
 
         Task AddTrackToPlaylistAsync(long playlistId, long trackId);
 
-        Task<PlaylistClientModel> GetPlayListByIdAsync(long playlistId, string currentUserId);
+        Task<Playlist> GetPlayListByIdAsync(long playlistId, string currentUserId);
 
         Task<long> GetFavouritePlaylistIdOfUserAsync(string userId);
 
-        Task<List<PlaylistClientModel>> GetPlayListsAsync(string currentUserId);
+        Task<List<Playlist>> GetPlaylistsAsync(string currentUserId);
 
         Task RemoveTrackFromPlaylistAsync(long playlistId, long trackId);
 
-        Task<List<PlaylistClientModel>> SearchPlaylistsAsync(string playlistName);
+        Task<List<Playlist>> SearchPlaylistsAsync(string playlistName);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Chinook.ClientModels;
+﻿using AutoMapper;
+using Chinook.ClientModels;
 using Chinook.Constants;
 using Chinook.Contracts;
 using Chinook.Exceptions;
@@ -12,11 +13,13 @@ namespace Chinook.Services
     {
         private readonly IDbContextFactory<ChinookContext> _dbFactory;
         private readonly PlaylistState _playlistState;
+        private readonly IMapper _mapper;
 
-        public PlaylistService(IDbContextFactory<ChinookContext> dbFactory, PlaylistState playlistState)
+        public PlaylistService(IDbContextFactory<ChinookContext> dbFactory, PlaylistState playlistState, IMapper mapper)
         {
             _dbFactory = dbFactory;
             _playlistState = playlistState;
+            _mapper = mapper;
         }
 
         public async Task AddTrackToPlaylistAsync(long playlistId, long trackId)
@@ -32,7 +35,7 @@ namespace Chinook.Services
                 var track = await dbContext.Tracks.FirstOrDefaultAsync(t => t.TrackId == trackId);
                 if (track != null)
                     updatingPlaylist.Tracks.Add(track);
-                    await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
             }
         }
 
@@ -45,7 +48,7 @@ namespace Chinook.Services
                 var track = await dbContext.Tracks.FirstOrDefaultAsync(t => t.TrackId == trackId);
                 if (track != null)
                     updatingPlaylist.Tracks.Remove(track);
-                    await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
             }
         }
 
@@ -56,12 +59,12 @@ namespace Chinook.Services
                 throw new DuplicateRecordException($"Error duplicate playlist:- {playlistName}");
 
             using var dbContext = _dbFactory.CreateDbContext();
-            Playlist newPlaylist = new Playlist { Name = playlistName };
+            Models.Playlist newPlaylist = new Models.Playlist { Name = playlistName };
             UserPlaylist newUserPlaylist = new UserPlaylist { PlaylistId = newPlaylist.PlaylistId, UserId = currentUserId };
             newPlaylist.UserPlaylists = new List<UserPlaylist> { newUserPlaylist };
             dbContext.Playlists.Add(newPlaylist);
             await dbContext.SaveChangesAsync();
-            _playlistState.AddPlaylist(new PlaylistClientModel {Id = newPlaylist.PlaylistId , Name = playlistName });
+            _playlistState.AddPlaylist(new ClientModels.Playlist { Id = newPlaylist.PlaylistId, Name = playlistName });
 
             return newPlaylist.PlaylistId;
         }
@@ -76,44 +79,42 @@ namespace Chinook.Services
             return userPlaylist?.Playlist.PlaylistId ?? -1;
         }
 
-        public async Task<PlaylistClientModel> GetPlayListByIdAsync(long playlistId, string currentUserId)
+        public async Task<ClientModels.Playlist> GetPlayListByIdAsync(long playlistId, string currentUserId)
         {
             using var dbContext = _dbFactory.CreateDbContext();
 
             var playlist = await dbContext.Playlists
-                .Include(a => a.Tracks).ThenInclude(a => a.Album).ThenInclude(a => a.Artist)
-                .Where(p => p.PlaylistId == playlistId)
-                .Select(p => new PlaylistClientModel()
-                {
-                    Name = p.Name,
-                    Tracks = p.Tracks.Select(t => new ClientModels.PlaylistTrackClientModel()
-                    {
-                        AlbumTitle = t.Album != null ? t.Album.Title : string.Empty,
-                        ArtistName = t.Album != null ? t.Album.Artist.Name : string.Empty,
-                        TrackId = t.TrackId,
-                        TrackName = t.Name,
-                        IsFavorite = t.Playlists
-                            .Where(p => p.UserPlaylists.Any(up => up.UserId == currentUserId && up.Playlist.Name == CommonConstant.UserFavouritePlayListName))
-                            .Any()
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
+                 .Include(a => a.Tracks).ThenInclude(a => a.Album).ThenInclude(a => a.Artist)
+                 .Include(a => a.Tracks).ThenInclude(t => t.Playlists).ThenInclude(tp => tp.UserPlaylists)
+                 .Where(p => p.PlaylistId == playlistId)
+                 .FirstOrDefaultAsync();
 
-            return playlist;
+            var clientPlaylist = _mapper.Map<ClientModels.Playlist>(playlist);
+
+            // Map the IsFavorite property
+            foreach (var track in clientPlaylist.Tracks)
+            {
+                track.IsFavorite = playlist.Tracks
+                    .Where(t => t.TrackId == track.TrackId && t.Playlists.Any(p => p.UserPlaylists.Any(up => up.UserId == currentUserId && up.Playlist.Name == CommonConstant.UserFavouritePlayListName)))
+                    .Any();
+            }
+
+            return clientPlaylist;
         }
 
-        public async Task<List<PlaylistClientModel>> GetPlayListsAsync(string currentUserId)
+        public async Task<List<ClientModels.Playlist>> GetPlaylistsAsync(string currentUserId)
         {
             using var dbContext = _dbFactory.CreateDbContext();
-            var userPlaylist = await dbContext.UserPlaylists
+            var userPlaylists = await dbContext.UserPlaylists
                 .Include(up => up.Playlist)
                 .Where(up => up.UserId == currentUserId)
-                .Select (up => new PlaylistClientModel { Name =  up.Playlist.Name, Id = up.PlaylistId})
                 .ToListAsync();
-            return userPlaylist;
+
+            var clientPlaylists = _mapper.Map<List<ClientModels.Playlist>>(userPlaylists);
+            return clientPlaylists;
         }
 
-        public async Task<List<PlaylistClientModel>> SearchPlaylistsAsync(string playlistName)
+        public async Task<List<ClientModels.Playlist>> SearchPlaylistsAsync(string playlistName)
         {
             throw new NotImplementedException();
         }

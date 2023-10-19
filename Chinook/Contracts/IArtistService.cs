@@ -4,8 +4,8 @@ namespace Chinook.Contracts
 {
     public interface IArtistService
     {
-        Task<ArtistClientModel> GetArtistByIdAsync(long artistId);
+        Task<Artist> GetArtistByIdAsync(long artistId);
 
-        Task<List<ArtistClientModel>> GetArtistsAsync(string artistName = "");
+        Task<List<Artist>> GetArtistsAsync(string artistName = "");
     }
 }

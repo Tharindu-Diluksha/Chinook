@@ -5,7 +5,6 @@
 @using Chinook.Constants;
 @using Chinook.Contracts;
 @using Chinook.Exceptions;
-@using Chinook.Models
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims;
 @inject IPlaylistService PlaylistService; 
@@ -69,7 +68,7 @@ else
     [Parameter] public long PlaylistId { get; set; }
     [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
 
-    private PlaylistClientModel _playlist;
+    private Playlist _playlist;
     private string _currentUserId;
     private string _infoMessage;
     private long _favouritePlayListId = -1;

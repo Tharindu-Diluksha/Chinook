@@ -4,6 +4,6 @@ namespace Chinook.Contracts
 {
     public interface ITrackService
     {
-        Task<List<PlaylistTrackClientModel>> GetTracksByArtistIdAsync(long artistId, string currentUserId);
+        Task<List<PlaylistTrack>> GetTracksByArtistIdAsync(long artistId, string currentUserId);
     }
 }

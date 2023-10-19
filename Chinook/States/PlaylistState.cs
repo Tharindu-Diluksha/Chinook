@@ -6,9 +6,9 @@ namespace Chinook.States
     {
         public event Action OnChange;
 
-        private List<PlaylistClientModel> playlists;
+        private List<Playlist> playlists;
 
-        public List<PlaylistClientModel> Playlists
+        public List<Playlist> Playlists
         {
             get => playlists;
             set
@@ -18,7 +18,7 @@ namespace Chinook.States
             }
         }
 
-        public void AddPlaylist(PlaylistClientModel playlist)
+        public void AddPlaylist(Playlist playlist)
         {
             playlists.Add(playlist);
             NotifyStateChanged();

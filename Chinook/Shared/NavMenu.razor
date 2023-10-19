@@ -24,7 +24,7 @@
         </div>
         <div class="nav-item px-3">
             @{
-                var sortedPlaylists = _playlists.OrderBy(p => p.Name != CommonConstant.UserFavouritePlayListName).ToList();
+                var sortedPlaylists = _playlists.OrderBy(p => p.Name != CommonConstant.UserFavouritePlayListName).ThenBy(p => p.Name).ToList();
             }
             @foreach (var playlist in sortedPlaylists)
             {
@@ -42,14 +42,14 @@
     [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
     private bool collapseNavMenu = true;
     private string _currentUserId;
-    private List<PlaylistClientModel> _playlists;
+    private List<Playlist> _playlists;
 
     protected override async Task OnInitializedAsync()
     {
         await InvokeAsync(StateHasChanged);
         _currentUserId = await GetUserId();
 
-        _playlists = await PlaylistService.GetPlayListsAsync(_currentUserId);
+        _playlists = await PlaylistService.GetPlaylistsAsync(_currentUserId);
         PlaylistState.Playlists = _playlists;
         PlaylistState.OnChange += UpdatePlaylists;
     }

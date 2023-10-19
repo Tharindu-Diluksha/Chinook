@@ -4,7 +4,6 @@
 @using Chinook.Constants;
 @using Chinook.Contracts;
 @using Chinook.Exceptions;
-@using Chinook.Models
 @using Chinook.ClientModels
 @using Chinook.States;
 @using Microsoft.EntityFrameworkCore
@@ -70,13 +69,13 @@ else
     [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
     private Modal _playlistDialog { get; set; }
 
-    private ArtistClientModel _artist;
-    private List<PlaylistTrackClientModel> _tracks;
-    private PlaylistTrackClientModel _selectedTrack;
+    private Artist _artist;
+    private List<PlaylistTrack> _tracks;
+    private PlaylistTrack _selectedTrack;
     private string _infoMessage;
     private string _currentUserId;
     private long _favouritePlayListId = -1;
-    private List<PlaylistClientModel> _playlists;
+    private List<Playlist> _playlists;
     private long _selectedPlaylistId = -1;
     private string _newPlaylistName = string.Empty;
 
@@ -91,7 +90,7 @@ else
 
         _tracks = await TrackService.GetTracksByArtistIdAsync(ArtistId, _currentUserId);
 
-        _playlists = await PlaylistService.GetPlayListsAsync(_currentUserId);
+        _playlists = await PlaylistService.GetPlaylistsAsync(_currentUserId);
         PlaylistState.Playlists = _playlists;
         PlaylistState.OnChange += UpdatePlaylists;
     }
@@ -195,7 +194,10 @@ else
             <label for="ExistingPlaylist">Add to existing playlist</label>
             <select class="form-control" id="ExistingPlaylist" @bind="_selectedPlaylistId" disabled="@(_newPlaylistName != string.Empty)">
                 <option value="-1">Select a playlist</option>
-                @foreach (var playlist in _playlists)
+                @{
+                    var sortedPlaylists = _playlists.OrderBy(p => p.Name != CommonConstant.UserFavouritePlayListName).ThenBy(p => p.Name).ToList();
+                }
+                @foreach (var playlist in sortedPlaylists)
                 {
                     <option value=@playlist.Id>@playlist.Name</option>
                 }
