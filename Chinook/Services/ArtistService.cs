@@ -33,7 +33,7 @@ namespace Chinook.Services
         {
             using var dbContext = _dbFactory.CreateDbContext();
             var artists = await dbContext.Artists
-                .Where(a => (string.IsNullOrEmpty(artistName)) || (!string.IsNullOrEmpty(artistName) && a.Name != null && a.Name.ToUpper().StartsWith(artistName.ToUpper())))
+                .Where(a => (string.IsNullOrEmpty(artistName)) || (!string.IsNullOrEmpty(artistName) && a.Name != null && a.Name.ToUpper().Contains(artistName.ToUpper())))
                 .Include(a => a.Albums)
                 .Select(a => new ArtistClientModel
                 {
